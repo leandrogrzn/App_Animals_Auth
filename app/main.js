@@ -19,7 +19,11 @@ const loadInitialTemplate = () => {
 }
 
 const getAnimals = async () => {
-	const response = await fetch('/animals')
+	const response = await fetch('/animals', {
+		headers: {
+			'Authorization': localStorage.getItem('jwt')
+		}
+	})
 	const animals = await response.json()
 	const template = animal => `
 		<li>
@@ -34,6 +38,9 @@ const getAnimals = async () => {
 		animalNode.onclick = async e => {
 			await fetch(`/animals/${animal._id}`, {
 				method: 'DELETE',
+				headers: {
+					'Authorization': localStorage.getItem('jwt')
+				}
 			})
 			animalNode.parentNode.remove()
 			alert('Eliminado con éxito')
@@ -51,7 +58,8 @@ const addFormListener = () => {
 			method: 'POST',
 			body: JSON.stringify(data),
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'Authorization': localStorage.getItem('jwt')
 			}
 		})
 		animalForm.reset()
@@ -59,8 +67,134 @@ const addFormListener = () => {
 	}
 }
 
-window.onload = () => {
+const checkLogin = () => 
+	localStorage.getItem('jwt')
+
+const animalsPage = () => {
 	loadInitialTemplate()
 	addFormListener()
-  getAnimals()
+  	getAnimals()
+}
+
+const loadRegisterTemplate = () =>{
+	const template = `
+		<h1>Register</h1>
+		<form id="register-form">
+			<div>
+				<label>Correo</label>
+				<input name="email" />
+			</div>
+			<div>
+				<label>Contraseña</label>
+				<input name="password" />
+			</div>
+			<button type="submit">Enviar</button>
+		</form>
+		<a href="#" id="login">Iniciar sesion</a>
+		<div id="error"></div>
+	`
+
+	const body = document.getElementsByTagName('body')[0]
+	body.innerHTML = template
+}
+const addRegisterListener = () =>{
+	const registerForm = document.getElementById('register-form')
+	registerForm.onsubmit = async (e) => {
+		e.preventDefault()
+		const formData = new FormData(registerForm)
+		const data = Object.fromEntries(formData.entries())
+
+		const response = await fetch('/register', {
+			method: 'POST',
+			body: JSON.stringify(data),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+		const responseData = await response.text()
+		if(response.status >= 300) {
+			const errorNode = document.getElementById('error')
+			errorNode.innerHTML = responseData
+		} else {
+			localStorage.setItem('jwt', `Bearer ${responseData}`)
+			animalsPage()
+		}
+	}
+}
+const gotoLoginListener = () =>{}
+
+const registerPage = () => {
+	loadRegisterTemplate()
+	addRegisterListener()
+  	gotoLoginListener()
+}
+
+const loginPage = () => {
+	loadLoginTemplate()
+	addLoginListener()	
+	gotoRegisterListener()
+}
+
+const loadLoginTemplate = () => {
+	const template = `
+		<h1>Login</h1>
+		<form id="login-form">
+			<div>
+				<label>Correo</label>
+				<input name="email" />
+			</div>
+			<div>
+				<label>Contraseña</label>
+				<input name="password" />
+			</div>
+			<button type="submit">Enviar</button>
+		</form>
+		<a href="#" id="register">Registrarse</a>
+		<div id="error"></div>
+	`
+
+	const body = document.getElementsByTagName('body')[0]
+	body.innerHTML = template
+}
+
+const gotoRegisterListener = () => {
+	const gotoRegister = document.getElementById('register')
+	gotoRegister.onclick = (e) => {
+		e.preventDefault()
+		registerPage()
+	}
+}
+
+const addLoginListener = () => {
+	const loginForm = document.getElementById('login-form')
+	loginForm.onsubmit = async (e) => {
+		e.preventDefault()
+		const formData = new FormData(loginForm)
+		const data = Object.fromEntries(formData.entries())
+
+		const response = await fetch('/login', {
+			method: 'POST',
+			body: JSON.stringify(data),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+		const responseData = await response.text()
+		if(response.status >= 300) {
+			const errorNode = document.getElementById('error')
+			errorNode.innerHTML = responseData
+		} else {
+			localStorage.setItem('jwt', `Bearer ${responseData}`)
+			animalsPage()
+		}
+	}
+}
+
+window.onload = () => {
+	const isLoggedIn = checkLogin()
+	if(isLoggedIn) {
+		animalsPage()
+	} else {
+		loginPage()
+	}
 }
