@@ -21,7 +21,7 @@ const loadInitialTemplate = () => {
 const getAnimals = async () => {
 	const response = await fetch('/animals', {
 		headers: {
-			'Authorization': localStorage.getItem('jwt')
+			Authorization: localStorage.getItem('jwt')
 		}
 	})
 	const animals = await response.json()
@@ -67,8 +67,10 @@ const addFormListener = () => {
 	}
 }
 
-const checkLogin = () => 
-	localStorage.getItem('jwt')
+const checkLogin = () => {
+	return localStorage.getItem('jwt')
+}
+	
 
 const animalsPage = () => {
 	loadInitialTemplate()
