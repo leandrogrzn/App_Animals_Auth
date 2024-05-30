@@ -46,7 +46,7 @@ const Auth = {
         const { body } = req
         try {
             const isUser = await User.findOne({ email: body.email })
-            if(!isUser) {
+            if(isUser) {
                 res.send('usuario ya existe')
             } else {
                 const salt = await bcrypt.genSalt()
